@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['suggestion_id'], $_PO
     exit;
 }
 
-// Récupération de toutes les suggestions (sans jointure pour éviter les erreurs de colonnes)
+// Récupération de toutes les suggestions
 try {
     $stmt = $pdo->query("
         SELECT * 
@@ -45,6 +45,16 @@ try {
   <title>DEY DEM - Gestion des Suggestions</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <style>
+    .suggestion-preview {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 0;
+    }
+  </style>
 </head>
 <body class="bg-light">
 
@@ -112,7 +122,13 @@ try {
                       <?php endif; ?>
                     </td>
                     <td>
-                      <p class="mb-0 text-dark"><?= nl2br(htmlspecialchars($s['content'])) ?></p>
+                      <p class="suggestion-preview text-dark"><?= htmlspecialchars($s['content']) ?></p>
+                      <?php if (mb_strlen($s['content']) > 80): ?>
+                        <button class="btn btn-link btn-sm p-0 text-decoration-none" 
+                                onclick="openModal(<?= $s['id'] ?>, '<?= quote($s['content']) ?>', '<?= date('d/m/Y H:i', strtotime($s['created_at'])) ?>')">
+                          Lire la suite <i class="bi bi-arrow-right"></i>
+                        </button>
+                      <?php endif; ?>
                     </td>
                     <td>
                       <small class="text-muted"><?= date('d/m/Y H:i', strtotime($s['created_at'])) ?></small>
@@ -153,6 +169,47 @@ try {
 
   </div>
 
+  <!-- MODALE POUR AFFICHER LE TEXTE COMPLET -->
+  <div class="modal fade" id="suggestionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title"><i class="bi bi-lightbulb text-warning me-2"></i>Suggestion #<span id="modalId"></span></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted small mb-2"><i class="bi bi-calendar-event me-1"></i>Reçue le : <span id="modalDate"></span></p>
+          <hr>
+          <div class="p-3 bg-light rounded border">
+            <p id="modalContent" class="mb-0 text-dark" style="white-space: pre-wrap; word-break: break-word;"></p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let suggestionModal;
+    document.addEventListener('DOMContentLoaded', () => {
+        suggestionModal = new bootstrap.Modal(document.getElementById('suggestionModal'));
+    });
+
+    function openModal(id, content, date) {
+        document.getElementById('modalId').textContent = id;
+        document.getElementById('modalDate').textContent = date;
+        document.getElementById('modalContent').textContent = content;
+        suggestionModal.show();
+    }
+  </script>
 </body>
 </html>
+<?php
+// Fonction utilitaire pour échapper les guillemets dans l'attribut JS
+function quote($v) {
+    return str_replace(["\r", "\n"], ["\\r", "\\n"], addslashes($v));
+}
+?>

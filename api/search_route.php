@@ -9,75 +9,122 @@ $data = json_decode(file_get_contents("php://input"), true);
 $origin = trim($data['origin'] ?? '');
 $destination = trim($data['destination'] ?? '');
 
-if (empty($origin) || empty($destination)) {
-    echo json_encode(["success" => false, "message" => "Veuillez préciser le départ et l'arrivée."]);
+if (empty($origin) && empty($destination)) {
+    echo json_encode(["success" => false, "message" => "Veuillez préciser au moins un lieu de recherche."]);
     exit;
 }
 
 $user_id =$_SESSION['user_id'] ?? null;
 $session_token = session_id();
 
-try {
-    // 1. Recherche dans la table officielle `transport_lines` avec des paramètres nommés uniques (:o1, :d1, :o2, :d2)
-    $stmt =$pdo->prepare("
-        SELECT 
-            tl.id,
-            tl.line_name AS transport_name,
-            tt.name AS transport_type_name,
-            loc_orig.name AS origin_name,
-            loc_dest.name AS destination_name,
-            COALESCE(tl.itinerary_details, CONCAT('Ligne officielle ', tt.name, ' reliant ', loc_orig.name, ' à ', loc_dest.name)) AS description,
-            'APPROVED' AS status,
-            NULL AS estimated_price,
-            CONCAT(loc_orig.name, ' / ', loc_dest.name) AS terminals
-        FROM transport_lines tl
-        INNER JOIN transport_types tt ON tl.transport_type_id = tt.id
-        LEFT JOIN locations loc_orig ON tl.origin_location_id = loc_orig.id
-        LEFT JOIN locations loc_dest ON tl.destination_location_id = loc_dest.id
-        WHERE (
-            (LOWER(loc_orig.name) LIKE LOWER(:o1) AND LOWER(loc_dest.name) LIKE LOWER(:d1))
-            OR
-            (LOWER(loc_orig.name) LIKE LOWER(:d2) AND LOWER(loc_dest.name) LIKE LOWER(:o2))
-        )
-    ");
+// Fonction de nettoyage pour retirer les mots superflus (gare, brt, etc.)
+function cleanSearchTerm($term) {
+    return trim(str_ireplace(['gare de', 'gare', '(brt)', 'ter', 'station'], '', $term));
+}
 
-    $stmt->execute([
-        ':o1' => '%' . $origin . '%',
-        ':d1' => '%' . $destination . '%',
-        ':o2' => '%' . $origin . '%',
-        ':d2' => '%' . $destination . '%'
-    ]);
+$cleanOrigin = cleanSearchTerm($origin);
+$cleanDestination = cleanSearchTerm($destination);
+
+try {
+    $results = [];
+
+    // 1. Recherche dans les lignes officielles `transport_lines`
+    if (!empty($cleanOrigin) && !empty($cleanDestination)) {
+        // Comme l'itinéraire contient les deux points (ex: "Lat Dior - Hlm Grand Yoff"),
+        // vérifier que les deux termes s'y trouvent fonctionne dans les deux sens.
+        $stmt =$pdo->prepare("
+            SELECT 
+                tl.id,
+                tl.line_name AS transport_name,
+                tt.name AS transport_type_name,
+                loc_orig.name AS origin_name,
+                loc_dest.name AS destination_name,
+                tl.itinerary_details AS description,
+                'APPROVED' AS status,
+                NULL AS estimated_price,
+                tl.itinerary_details AS terminals
+            FROM transport_lines tl
+            INNER JOIN transport_types tt ON tl.transport_type_id = tt.id
+            LEFT JOIN locations loc_orig ON tl.origin_location_id = loc_orig.id
+            LEFT JOIN locations loc_dest ON tl.destination_location_id = loc_dest.id
+            WHERE LOWER(tl.itinerary_details) LIKE LOWER(:o) 
+              AND LOWER(tl.itinerary_details) LIKE LOWER(:d)
+        ");
+        $stmt->execute([
+            ':o' => '%' . $cleanOrigin . '%',
+            ':d' => '%' . $cleanDestination . '%'
+        ]);
+    } else {
+        $searchTerm = !empty($cleanOrigin) ? $cleanOrigin :$cleanDestination;
+        $stmt =$pdo->prepare("
+            SELECT 
+                tl.id,
+                tl.line_name AS transport_name,
+                tt.name AS transport_type_name,
+                loc_orig.name AS origin_name,
+                loc_dest.name AS destination_name,
+                tl.itinerary_details AS description,
+                'APPROVED' AS status,
+                NULL AS estimated_price,
+                tl.itinerary_details AS terminals
+            FROM transport_lines tl
+            INNER JOIN transport_types tt ON tl.transport_type_id = tt.id
+            LEFT JOIN locations loc_orig ON tl.origin_location_id = loc_orig.id
+            LEFT JOIN locations loc_dest ON tl.destination_location_id = loc_dest.id
+            WHERE LOWER(tl.itinerary_details) LIKE LOWER(:term)
+        ");
+        $stmt->execute([':term' => '\%' .$searchTerm . '%']);
+    }
 
     $results =$stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 2. Si aucune ligne officielle n'est trouvée, on vérifie dans `transport_routes` (routes soumises par les utilisateurs)
+    // 2. Si aucune ligne officielle n'est trouvée, on cherche dans `transport_routes`
     if (count($results) === 0) {
-        $fallbackStmt =$pdo->prepare("
-            SELECT 
-                r.id,
-                t.name AS transport_name,
-                r.origin_name,
-                r.destination_name,
-                r.estimated_price,
-                r.status,
-                t.description,
-                NULL AS terminals
-            FROM transport_routes r
-            INNER JOIN transport_types t ON r.transport_type_id = t.id
-            WHERE (LOWER(r.origin_name) LIKE LOWER(:o1) AND LOWER(r.destination_name) LIKE LOWER(:d1))
-               OR (LOWER(r.origin_name) LIKE LOWER(:d2) AND LOWER(r.destination_name) LIKE LOWER(:o2))
-        ");
-        $fallbackStmt->execute([
-            ':o1' => '%' . $origin . '%',
-            ':d1' => '%' . $destination . '%',
-            ':o2' => '%' . $origin . '%',
-            ':d2' => '%' . $destination . '%'
-        ]);
+        if (!empty($origin) && !empty($destination)) {
+            $fallbackStmt =$pdo->prepare("
+                SELECT 
+                    r.id,
+                    t.name AS transport_name,
+                    r.origin_name,
+                    r.destination_name,
+                    r.estimated_price,
+                    r.status,
+                    t.description,
+                    NULL AS terminals
+                FROM transport_routes r
+                INNER JOIN transport_types t ON r.transport_type_id = t.id
+                WHERE (LOWER(r.origin_name) LIKE LOWER(:o1) AND LOWER(r.destination_name) LIKE LOWER(:d1))
+                   OR (LOWER(r.origin_name) LIKE LOWER(:d2) AND LOWER(r.destination_name) LIKE LOWER(:o2))
+            ");
+            $fallbackStmt->execute([
+                ':o1' => '%' . $origin . '%',
+                ':d1' => '%' . $destination . '%',
+                ':o2' => '%' . $origin . '%',
+                ':d2' => '%' . $destination . '%'
+            ]);
+        } else {
+            $searchTerm = !empty($origin) ? $origin :$destination;
+            $fallbackStmt =$pdo->prepare("
+                SELECT 
+                    r.id,
+                    t.name AS transport_name,
+                    r.origin_name,
+                    r.destination_name,
+                    r.estimated_price,
+                    r.status,
+                    t.description,
+                    NULL AS terminals
+                FROM transport_routes r
+                INNER JOIN transport_types t ON r.transport_type_id = t.id
+                WHERE LOWER(r.origin_name) LIKE LOWER(:term) OR LOWER(r.destination_name) LIKE LOWER(:term)
+            ");
+            $fallbackStmt->execute([':term' => '\%' .$searchTerm . '%']);
+        }
         $results =$fallbackStmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // 3. Si toujours rien, on enregistre la recherche comme proposition PENDING
-    if (count($results) === 0) {
+    // 3. Si toujours rien et qu'on a les deux champs, enregistrement de la recherche en PENDING
+    if (count($results) === 0 && !empty($origin) && !empty($destination)) {
         $insertStmt =$pdo->prepare("
             INSERT INTO transport_routes 
             (user_id, session_token, transport_type_id, origin_name, destination_name, status) 
