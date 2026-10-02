@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;">
   <title>DEY DEM - Transports & Mobilité au Sénégal</title>
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -12,7 +13,7 @@
     .hero-search {
       background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
       color: white;
-      padding: 60px 0;
+      padding: 50px 0;
       border-radius: 0 0 20px 20px;
     }
     .transport-card {
@@ -102,42 +103,82 @@
   <div class="hero-search text-center mb-4">
     <div class="container">
       <h1 class="fw-bold mb-3"><i class="bi bi-bus-front"></i> DEY DEM Transports</h1>
-      <p class="lead mb-4">Trouvez les transports disponibles pour votre trajet (Dakar & Régions)</p>
+      <p class="lead mb-4">Trouvez les transports disponibles pour votre trajet ou par arrêt à Dakar</p>
       
-      <!-- Formulaire de recherche -->
-      <div class="card shadow p-4 text-dark mx-auto" style="max-width: 750px;">
-        <form id="searchForm">
-          <div class="row g-3">
-            
-            <!-- Champ Départ -->
-            <div class="col-md-5 autocomplete-wrapper">
-              <label class="form-label text-start d-block fw-semibold">Départ</label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-geo-alt-fill text-danger"></i></span>
-                <input type="text" id="origin" class="form-control" placeholder="Tapez un lieu (ex: Liberté 6...)" autocomplete="off" required>
+      <!-- Carte des formulaires de recherche avec onglets -->
+      <div class="card shadow p-4 text-dark mx-auto rounded-4" style="max-width: 750px;">
+        
+        <!-- Onglets de sélection du mode de recherche -->
+        <ul class="nav nav-pills justify-content-center mb-4 gap-2" id="searchModeTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-semibold btn-sm" id="tab-route" data-bs-toggle="pill" data-bs-target="#pane-route" type="button" role="tab">
+              <i class="bi bi-signpost-split me-1"></i> Recherche par Trajet
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold btn-sm" id="tab-stop" data-bs-toggle="pill" data-bs-target="#pane-stop" type="button" role="tab">
+              <i class="bi bi-geo-alt me-1"></i> Recherche par Arrêt / Terminus
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="searchModeContent">
+          
+          <!-- MODE 1 : RECHERCHE PAR TRAJET -->
+          <div class="tab-pane fade show active" id="pane-route" role="tabpanel">
+            <form id="searchForm">
+              <div class="row g-3">
+                <div class="col-md-5 autocomplete-wrapper">
+                  <label class="form-label text-start d-block fw-semibold">Départ</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-geo-alt-fill text-danger"></i></span>
+                    <input type="text" id="origin" class="form-control" placeholder="Tapez un lieu..." autocomplete="off" required>
+                  </div>
+                  <div id="originResults" class="autocomplete-results d-none"></div>
+                </div>
+
+                <div class="col-md-5 autocomplete-wrapper">
+                  <label class="form-label text-start d-block fw-semibold">Arrivée</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-flag-fill text-success"></i></span>
+                    <input type="text" id="destination" class="form-control" placeholder="Tapez un lieu..." autocomplete="off" required>
+                  </div>
+                  <div id="destinationResults" class="autocomplete-results d-none"></div>
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                  <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                    <i class="bi bi-search"></i>
+                  </button>
+                </div>
               </div>
-              <div id="originResults" class="autocomplete-results d-none"></div>
-            </div>
-
-            <!-- Champ Arrivée -->
-            <div class="col-md-5 autocomplete-wrapper">
-              <label class="form-label text-start d-block fw-semibold">Arrivée</label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-flag-fill text-success"></i></span>
-                <input type="text" id="destination" class="form-control" placeholder="Tapez un lieu (ex: Pikine...)" autocomplete="off" required>
-              </div>
-              <div id="destinationResults" class="autocomplete-results d-none"></div>
-            </div>
-
-            <!-- Bouton Rechercher -->
-            <div class="col-md-2 d-flex align-items-end">
-              <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
-                <i class="bi bi-search"></i> Rechercher
-              </button>
-            </div>
-
+            </form>
           </div>
-        </form>
+
+          <!-- MODE 2 : RECHERCHE PAR ARRÊT OU TERMINUS UNIQUE -->
+          <div class="tab-pane fade" id="pane-stop" role="tabpanel">
+            <form id="searchStopForm">
+              <div class="row g-3">
+                <div class="col-md-10 autocomplete-wrapper">
+                  <label class="form-label text-start d-block fw-semibold">Arrêt, Quartier ou Terminus</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-pin-map-fill text-primary"></i></span>
+                    <input type="text" id="singleStop" class="form-control" placeholder="Ex: Colobane, Pikine, Liberté 6..." autocomplete="off" required>
+                  </div>
+                  <div id="singleStopResults" class="autocomplete-results d-none"></div>
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                  <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                    <i class="bi bi-search"></i>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+        </div>
+
       </div>
 
     </div>
@@ -150,7 +191,6 @@
         <i class="bi bi-signpost-split-fill me-2 text-primary"></i>Accès rapide aux lignes phares
       </h5>
       
-      <!-- Onglets Tata / DDD -->
       <ul class="nav nav-pills mb-3" id="lineTabs" role="tablist">
         <li class="nav-item" role="presentation">
           <button class="nav-link active btn-sm fw-semibold" id="tata-tab" data-bs-toggle="pill" data-bs-target="#tata-pane" type="button" role="tab">🚌 Bus Tata</button>
@@ -161,23 +201,21 @@
       </ul>
       
       <div class="tab-content" id="lineTabsContent">
-        <!-- Panneau Bus Tata -->
         <div class="tab-pane fade show active" id="tata-pane" role="tabpanel">
           <div class="d-flex flex-wrap gap-2">
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS GADAYE" data-destination="TERMINUS NGOR">Ligne 49 (Gadaye ➔ Ngor)</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS PETERSEN" data-destination="TERMINUS MALIKA PLAGE">Ligne 50 (Petersen ➔ Malika)</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS JAXAAY" data-destination="TERMINUS GARE DES BAUX MARAICHERS">Ligne 51 (Jaxaay ➔ Baux Maraichers)</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS BEAUX MARAICHERS" data-destination="TERMINUS JAXAAY">Ligne 52 (Beaux Maraichers ➔ Jaxaay)</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS KEUR MASSAR (MARCHE)" data-destination="TERMINUS SEBIKHOTANE">Ligne 53 (Keur Massar ➔ Sébikotane)</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS KEUR MASSAR (MTOA)" data-destination="TERMINUS UNIVERSITE CHEIKH ANTA DIOP">Ligne 54 (Keur Massar ➔ UCAD)</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS RUFISQUE SONADIS" data-destination="TERMINUS PETERSEN">Ligne 55 (Rufisque ➔ Petersen)</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS JAXAAY 1" data-destination="TERMINUS PETERSEN">Ligne 56 (Jaxaay ➔ Petersen)</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS RUFISQUE GOUYE MOURIDE" data-destination="TERMINUS ROND-POINT LIBERTE 6">Ligne 57 (Rufisque ➔ Liberté 6)</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS FASS MBAO (RAIL-BA)" data-destination="TERMINUS SHAM">Ligne 58 (Fass Mbao ➔ Sham)</button>
+            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS GADAYE" data-destination="TERMINUS NGOR">Ligne 49</button>
+            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS PETERSEN" data-destination="TERMINUS MALIKA PLAGE">Ligne 50</button>
+            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS JAXAAY" data-destination="TERMINUS GARE DES BAUX MARAICHERS">Ligne 51</button>
+            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS BEAUX MARAICHERS" data-destination="TERMINUS JAXAAY">Ligne 52</button>
+            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS KEUR MASSAR (MARCHE)" data-destination="TERMINUS SEBIKHOTANE">Ligne 53</button>
+            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS KEUR MASSAR (MTOA)" data-destination="TERMINUS UNIVERSITE CHEIKH ANTA DIOP">Ligne 54</button>
+            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS RUFISQUE SONADIS" data-destination="TERMINUS PETERSEN">Ligne 55</button>
+            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS JAXAAY 1" data-destination="TERMINUS PETERSEN">Ligne 56</button>
+            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS RUFISQUE GOUYE MOURIDE" data-destination="TERMINUS ROND-POINT LIBERTE 6">Ligne 57</button>
+            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS FASS MBAO (RAIL-BA)" data-destination="TERMINUS SHAM">Ligne 58</button>
           </div>
         </div>
         
-        <!-- Panneau Dakar Dem Dikk -->
         <div class="tab-pane fade" id="ddd-pane" role="tabpanel">
           <div class="d-flex flex-wrap gap-2">
             <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS LIGNE 7" data-destination="TERMINUS LIGNE 7">Ligne 7</button>
@@ -201,7 +239,7 @@
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Chargement...</span>
       </div>
-      <p class="mt-2 text-muted">Recherche des moyens de transport en cours...</p>
+      <p class="mt-2 text-muted">Recherche en cours...</p>
     </div>
 
     <div class="row g-4" id="transportResults"></div>
@@ -224,19 +262,15 @@
         </div>
         <form id="suggestionForm">
           <div class="modal-body p-4">
-            <p class="text-muted small">Une idée de fonctionnalité, une correction de ligne ou une remarque pour la plateforme ? Partagez-la avec nous !</p>
-            
+            <p class="text-muted small">Une idée de fonctionnalité ou une correction de ligne ? Partagez-la avec nous !</p>
             <div class="mb-3">
-              <textarea id="suggestionContent" class="form-control" rows="4" placeholder="Ex: Ajouter les horaires des bus Tata, ou permettre de filtrer par prix..." required></textarea>
+              <textarea id="suggestionContent" class="form-control" rows="4" placeholder="Votre message..." required></textarea>
             </div>
-            
             <div id="suggestionAlert" class="d-none alert mb-0 py-2 small"></div>
           </div>
           <div class="modal-footer bg-light">
             <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
-            <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold" id="submitSuggestionBtn">
-              Envoyer ma suggestion
-            </button>
+            <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold" id="submitSuggestionBtn">Envoyer</button>
           </div>
         </form>
       </div>
@@ -246,6 +280,16 @@
   <!-- Scripts Bootstrap et JS Personnalisé -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     // Système d'autocomplétion
     function setupAutocomplete(inputId, resultsId) {
       const input = document.getElementById(inputId);
@@ -253,7 +297,6 @@
 
       input.addEventListener('input', async function() {
         const query = this.value.trim();
-        
         if (query.length < 2) {
           resultsContainer.classList.add('d-none');
           resultsContainer.innerHTML = '';
@@ -263,7 +306,6 @@
         try {
           const response = await fetch(`api/get_locations.php?q=${encodeURIComponent(query)}`);
           const locations = await response.json();
-
           resultsContainer.innerHTML = '';
 
           if (!locations || locations.length === 0) {
@@ -274,19 +316,13 @@
           locations.forEach(loc => {
             const item = document.createElement('div');
             item.className = 'autocomplete-item';
-            item.innerHTML = `
-              <strong>${loc.name}</strong> 
-              ${loc.district_neighborhood ? `<small class="text-muted">(${loc.district_neighborhood})</small>` : ''}
-            `;
-
+            item.innerHTML = `<strong>${escapeHtml(loc.name)}</strong> ${loc.district_neighborhood ? `<small class="text-muted">(${escapeHtml(loc.district_neighborhood)})</small>` : ''}`;
             item.addEventListener('click', function() {
               input.value = loc.name;
               resultsContainer.classList.add('d-none');
             });
-
             resultsContainer.appendChild(item);
           });
-
           resultsContainer.classList.remove('d-none');
         } catch (error) {
           console.error('Erreur autocomplétion:', error);
@@ -302,6 +338,7 @@
 
     setupAutocomplete('origin', 'originResults');
     setupAutocomplete('destination', 'destinationResults');
+    setupAutocomplete('singleStop', 'singleStopResults');
 
     // Gestion des clics sur les raccourcis de lignes
     document.querySelectorAll('.line-shortcut').forEach(btn => {
@@ -312,21 +349,103 @@
       });
     });
 
-    // Gestion de la soumission du formulaire principal
-    document.getElementById('searchForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-
-      const origin = document.getElementById('origin').value.trim();
-      const destination = document.getElementById('destination').value.trim();
-      
+    // Fonction commune d'affichage des résultats
+    function displayResults(data, summaryText) {
       const resultsContainer = document.getElementById('transportResults');
       const resultsHeader = document.getElementById('resultsHeader');
       const searchSummary = document.getElementById('searchSummary');
       const loading = document.getElementById('loading');
 
+      loading.classList.add('d-none');
       resultsContainer.innerHTML = '';
-      resultsHeader.classList.add('d-none');
-      loading.classList.remove('d-none');
+      resultsHeader.classList.remove('d-none');
+      searchSummary.textContent = summaryText;
+
+      if (!data.results || data.results.length === 0) {
+        resultsContainer.innerHTML = `
+          <div class="col-12 text-center py-5">
+            <i class="bi bi-info-circle text-primary display-4"></i>
+            <h5 class="mt-3">Aucun véhicule répertorié pour cette recherche.</h5>
+            <p class="text-muted">Votre recherche a été enregistrée pour analyse.</p>
+          </div>`;
+        return;
+      }
+
+      data.results.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'col-12';
+
+        const itineraryText = item.itinerary_details || item.description || '';
+        const stops = itineraryText.split('-').map(s => s.trim()).filter(s => s.length > 0);
+
+        const transportType = (item.transport_type_name || item.transport_type_code || '').toUpperCase();
+        let networkBadge = '';
+        if (transportType.includes('TATA') || transportType.includes('BUS')) {
+          networkBadge = '<span class="badge bg-info text-dark ms-2"><i class="bi bi-bus-front"></i> Bus Tata</span>';
+        } else if (transportType.includes('DEM') || transportType.includes('DDD') || transportType.includes('DAKAR')) {
+          networkBadge = '<span class="badge bg-success ms-2"><i class="bi bi-bus-front-fill"></i> Dakar Dem Dikk</span>';
+        } else {
+          networkBadge = `<span class="badge bg-secondary ms-2">${escapeHtml(item.transport_type_name || 'Transport')}</span>`;
+        }
+
+        let timelineHtml = '<div style="max-height: 250px; overflow-y: auto;" class="pe-2"><div class="timeline">';
+        stops.forEach((stop, index) => {
+          const isTerminus = (index === 0 || index === stops.length - 1 || stop.toUpperCase().includes('TERMINUS'));
+          timelineHtml += `
+            <div class="timeline-item ${isTerminus ? 'terminus' : ''}">
+              <div class="timeline-marker"></div>
+              <div class="timeline-content">
+                <span class="${isTerminus ? 'fw-bold text-primary' : 'text-dark'}">${escapeHtml(stop)}</span>
+                ${isTerminus ? '<span class="badge bg-primary ms-2" style="font-size: 9px;">Terminus</span>' : ''}
+              </div>
+            </div>
+          `;
+        });
+        timelineHtml += '</div></div>';
+
+        card.innerHTML = `
+          <div class="card border-0 shadow-sm transport-card mb-3">
+            <div class="card-body p-4">
+              <div class="row align-items-center">
+                <div class="col-md-4 mb-3 mb-md-0 border-end-md">
+                  <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
+                    <div>
+                      <span class="badge bg-primary fs-6 px-3 py-2">${escapeHtml(item.transport_name)}</span>
+                      ${networkBadge}
+                    </div>
+                    <span class="badge ${item.status === 'APPROVED' ? 'bg-success' : 'bg-warning text-dark'}">
+                      ${item.status === 'APPROVED' ? '<i class="bi bi-check-circle"></i> Vérifié' : '<i class="bi bi-clock"></i> En attente'}
+                    </span>
+                  </div>
+                  <h4 class="fw-bold text-dark mb-2">${escapeHtml(item.origin_name || '')} ➔ ${escapeHtml(item.destination_name || '')}</h4>
+                  <div class="mt-3">
+                    <small class="text-muted d-block">Tarif estimé</small>
+                    <strong class="text-success fs-4">${item.estimated_price ? escapeHtml(item.estimated_price) + ' FCFA' : 'Non renseigné'}</strong>
+                  </div>
+                </div>
+                
+                <div class="col-md-8">
+                  <h6 class="fw-bold text-secondary mb-3">
+                    <i class="bi bi-list-nested me-2 text-primary"></i>Itinéraire détaillé (${stops.length} arrêts)
+                  </h6>
+                  ${timelineHtml}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        resultsContainer.appendChild(card);
+      });
+    }
+
+    // 1. Soumission du formulaire par Trajet
+    document.getElementById('searchForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const origin = document.getElementById('origin').value.trim();
+      const destination = document.getElementById('destination').value.trim();
+      
+      document.getElementById('loading').classList.remove('d-none');
+      document.getElementById('transportResults').innerHTML = '';
 
       try {
         const response = await fetch('api/search_route.php', {
@@ -334,179 +453,56 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ origin, destination })
         });
-
         const data = await response.json();
-        loading.classList.add('d-none');
-
-        if (data.success) {
-          resultsHeader.classList.remove('d-none');
-          searchSummary.textContent = `Trajet : ${origin} ➔ ${destination} (${data.results.length} moyen(s) de transport trouvé(s))`;
-
-          if (data.results.length === 0) {
-            resultsContainer.innerHTML = `
-              <div class="col-12 text-center py-5">
-                <i class="bi bi-info-circle text-primary display-4"></i>
-                <h5 class="mt-3">Aucun véhicule répertorié pour ce trajet exact.</h5>
-                <p class="text-muted">Votre recherche a été enregistrée et transmise aux modérateurs pour étude et validation.</p>
-              </div>`;
-            return;
-          }
-
-          data.results.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'col-12';
-
-            const itineraryText = item.itinerary_details || item.description || '';
-            const stops = itineraryText.split('-').map(s => s.trim()).filter(s => s.length > 0);
-
-            let timelineHtml = '<div style="max-height: 250px; overflow-y: auto;" class="pe-2"><div class="timeline">';
-            stops.forEach((stop, index) => {
-              const isTerminus = (index === 0 || index === stops.length - 1 || stop.toUpperCase().includes('TERMINUS'));
-              timelineHtml += `
-                <div class="timeline-item ${isTerminus ? 'terminus' : ''}">
-                  <div class="timeline-marker"></div>
-                  <div class="timeline-content">
-                    <span class="${isTerminus ? 'fw-bold text-primary' : 'text-dark'}">${stop}</span>
-                    ${isTerminus ? '<span class="badge bg-primary ms-2" style="font-size: 9px;">Terminus</span>' : ''}
-                  </div>
-                </div>
-              `;
-            });
-            timelineHtml += '</div></div>';
-
-            card.innerHTML = `
-              <div class="card border-0 shadow-sm transport-card mb-3">
-                <div class="card-body p-4">
-                  <div class="row align-items-center">
-                    <div class="col-md-4 mb-3 mb-md-0 border-end-md">
-                      <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="badge bg-primary fs-6 px-3 py-2">${item.transport_name}</span>
-                        <span class="badge ${item.status === 'APPROVED' ? 'bg-success' : 'bg-warning text-dark'}">
-                          ${item.status === 'APPROVED' ? '<i class="bi bi-check-circle"></i> Vérifié' : '<i class="bi bi-clock"></i> En attente'}
-                        </span>
-                      </div>
-                      <h4 class="fw-bold text-dark mb-2">${item.origin_name} ➔ ${item.destination_name}</h4>
-                      <div class="mt-3">
-                        <small class="text-muted d-block">Tarif estimé</small>
-                        <strong class="text-success fs-4">${item.estimated_price ? item.estimated_price + ' FCFA' : 'Non renseigné'}</strong>
-                      </div>
-                    </div>
-                    
-                    <div class="col-md-8">
-                      <h6 class="fw-bold text-secondary mb-3">
-                        <i class="bi bi-list-nested me-2 text-primary"></i>Itinéraire détaillé (${stops.length} arrêts)
-                      </h6>
-                      ${timelineHtml}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            `;
-            resultsContainer.appendChild(card);
-          });
-        } else {
-          resultsContainer.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
-        }
+        displayResults(data, `Trajet : ${origin} ➔ ${destination} (${data.results ? data.results.length : 0} trouvé(s))`);
       } catch (error) {
-        loading.classList.add('d-none');
-        resultsContainer.innerHTML = `<div class="alert alert-danger">Erreur de communication avec le serveur.</div>`;
+        document.getElementById('loading').classList.add('d-none');
+        alert("Erreur de communication avec le serveur.");
       }
     });
 
-    // Gestion de l'envoi de la suggestion (Corrigé ici)
-    document.getElementById('suggestionForm').addEventListener('submit', async function(e) {
+    // 2. Soumission du formulaire par Arrêt Unique
+    document.getElementById('searchStopForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+      const stop = document.getElementById('singleStop').value.trim();
       
-      const content = document.getElementById('suggestionContent').value.trim();
-      const alertBox = document.getElementById('suggestionAlert');
-      const submitBtn = document.getElementById('submitSuggestionBtn');
-
-      if (!content) return;
-
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Envoi...';
+      document.getElementById('loading').classList.remove('d-none');
+      document.getElementById('transportResults').innerHTML = '';
 
       try {
-        const response = await fetch('api/add_suggestion.php', {
+        const response = await fetch('api/search_by_stop.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content })
+          body: JSON.stringify({ stop })
         });
-        
-        const result = await response.json();
-
-        alertBox.classList.remove('d-none', 'alert-danger', 'alert-success');
-        
-        if (result.success) {
-          alertBox.classList.add('alert-success');
-          alertBox.textContent = result.message;
-          document.getElementById('suggestionContent').value = ''; // Correction de la parenthèse
-          
-          setTimeout(() => {
-            const modalEl = document.getElementById('suggestionModal');
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            modal.hide();
-            alertBox.classList.add('d-none');
-          }, 2000);
-          
-        } else {
-          alertBox.classList.add('alert-danger');
-          alertBox.textContent = result.message;
-        }
-      } catch (err) {
-        alertBox.classList.remove('d-none', 'alert-success');
-        alertBox.classList.add('alert-danger');
-        alertBox.textContent = "Erreur de connexion au serveur.";
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Envoyer ma suggestion";
+        const data = await response.json();
+        displayResults(data, `Lignes desservant l'arrêt ou le terminus : "${stop}" (${data.results ? data.results.length : 0} trouvé(s))`);
+      } catch (error) {
+        document.getElementById('loading').classList.add('d-none');
+        alert("Erreur de communication avec le serveur.");
       }
     });
   </script>
-  <!-- Pied de page avec Mentions Légales et Sources -->
-<footer class="bg-white border-top py-4 mt-5 text-muted">
-  <div class="container text-center">
-    <div class="row justify-content-center">
-      <div class="col-lg-8">
-        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-shield-check text-primary"></i> Transparence & Sources officielles</h6>
-        <p class="small mb-3" style="text-align: justify; line-height: 1.5;">
-          Les informations d'itinéraires affichées sur <strong>DEY DEM</strong> proviennent de données publiques issues des documentations officielles du 
-          <strong>CETUD</strong>, de <strong>Dakar Dem Dikk</strong> et de l'<strong>AFTU</strong>. Cette plateforme est un outil d'aide à la mobilité citoyenne 
-          indépendant. Les dénominations et réseaux appartiennent à leurs entités respectives.
-        </p>
-        <div class="d-flex justify-content-center gap-3 text-xs">
-          <a href="#" class="text-decoration-none text-muted" data-bs-toggle="modal" data-bs-target="#legalModal">Mentions légales complètes</a>
-          <span>•</span>
-          <span>© 2026 DEY DEM Transports</span>
+
+  <!-- Footer -->
+  <footer class="bg-white border-top py-4 mt-5 text-muted">
+    <div class="container text-center">
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="mb-4 p-3 bg-light rounded-4 border">
+            <h6 class="fw-bold text-dark mb-2">Soutenez le développement de DEY DEM 🇸🇳</h6>
+            <a href="https://pay.wave.com/m/M_Meu-gJxcUafE/c/sn/." target="_blank" rel="noopener noreferrer" class="btn fw-bold d-inline-flex align-items-center gap-2 shadow-sm px-4 py-2 rounded-pill text-dark" style="background-color: #11d5e5; border: none;">
+              <i class="bi bi-heart-fill text-danger"></i> Faire un don avec Wave
+            </a>
+          </div>
+          <p class="small mb-3">Données issues des documentations officielles du CETUD, de Dakar Dem Dikk et de l'AFTU.</p>
+          <div class="d-flex justify-content-center gap-3 text-xs">
+            <span>© 2026 DEY DEM Transports</span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</footer>
+  </footer>
 
-<!-- Modale optionnelle pour les Mentions Légales détaillées -->
-<div class="modal fade" id="legalModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content border-0 shadow">
-      <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title fw-bold"><i class="bi bi-journal-text me-2"></i>Mentions Légales & Propriété Intellectuelle</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
-      </div>
-      <div class="modal-body p-4 text-start small">
-        <h6 class="fw-bold text-dark">1. Objet du site</h6>
-        <p class="text-muted">DEY DEM est une application web d'information sur les transports au Sénégal visant à faciliter les déplacements des usagers à Dakar et dans les régions.</p>
-        
-        <h6 class="fw-bold text-dark">2. Propriété intellectuelle et Sources</h6>
-        <p class="text-muted">Les descriptions de lignes, arrêts et correspondances s'inspirent des répertoires publics du transport urbain sénégalais régies par le <strong>CETUD</strong>, les réseaux <strong>Dakar Dem Dikk</strong> et les groupements de transporteurs affiliés à l'<strong>AFTU</strong>. Aucune exploitation commerciale des marques officielles n'est effectuée.</p>
-        
-        <h6 class="fw-bold text-dark">3. Limitation de responsabilité</h6>
-        <p class="text-muted mb-0">Malgré tous les efforts de vérification, les horaires, tarifs ou tracés peuvent être sujets à des modifications de la part des autorités de transport. DEY DEM décline toute responsabilité en cas de modification imprévue sur le réseau.</p>
-      </div>
-      <div class="modal-footer bg-light">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
-      </div>
-    </div>
-  </div>
-</div>
 </body>
 </html>
