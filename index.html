@@ -3,7 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com;">
+  <!-- ========================================== -->
+  <!-- GOOGLE ANALYTICS (GA4) -->
+  <!-- ========================================== -->
+  <script async src="https://www.googletagmanager.com/gtag.js?id=G-B51D1RP0P6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-B51D1RP0P6');
+  </script>
+  <!-- ========================================== -->
   <title>DEY DEM - Transports & Mobilité au Sénégal</title>
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -108,10 +120,10 @@
       <!-- Carte des formulaires de recherche avec onglets -->
       <div class="card shadow p-4 text-dark mx-auto rounded-4" style="max-width: 750px;">
         
-        <!-- Onglets de sélection (Arrêt en premier et actif) -->
+        <!-- Onglets de sélection (Aucun actif par défaut) -->
         <ul class="nav nav-pills justify-content-center mb-4 gap-2" id="searchModeTabs" role="tablist">
           <li class="nav-item" role="presentation">
-            <button class="nav-link active fw-semibold btn-sm" id="tab-stop" data-bs-toggle="pill" data-bs-target="#pane-stop" type="button" role="tab">
+            <button class="nav-link fw-semibold btn-sm" id="tab-stop" data-bs-toggle="pill" data-bs-target="#pane-stop" type="button" role="tab">
               <i class="bi bi-geo-alt me-1"></i> Recherche par Arrêt / Terminus
             </button>
           </li>
@@ -124,8 +136,8 @@
 
         <div class="tab-content" id="searchModeContent">
           
-          <!-- MODE 1 : RECHERCHE PAR ARRÊT OU TERMINUS UNIQUE (Actif par défaut) -->
-          <div class="tab-pane fade show active" id="pane-stop" role="tabpanel">
+          <!-- MODE 1 : RECHERCHE PAR ARRÊT OU TERMINUS UNIQUE -->
+          <div class="tab-pane fade" id="pane-stop" role="tabpanel">
             <form id="searchStopForm">
               <div class="row g-3">
                 <div class="col-md-10 autocomplete-wrapper">
@@ -184,16 +196,16 @@
     </div>
   </div>
 
-  <!-- Section Accès Rapide aux Lignes (Bus Tata & Dakar Dem Dikk) -->
+  <!-- Section Accès Rapide à TOUTES les Lignes (Aucun onglet actif par défaut) -->
   <div class="container mb-4">
     <div class="card shadow-sm border-0 p-3 bg-white rounded-4">
       <h5 class="fw-bold mb-3 text-secondary">
-        <i class="bi bi-signpost-split-fill me-2 text-primary"></i>Accès rapide aux lignes phares
+        <i class="bi bi-signpost-split-fill me-2 text-primary"></i>Accès rapide à toutes les lignes enregistrées
       </h5>
       
       <ul class="nav nav-pills mb-3" id="lineTabs" role="tablist">
         <li class="nav-item" role="presentation">
-          <button class="nav-link active btn-sm fw-semibold" id="tata-tab" data-bs-toggle="pill" data-bs-target="#tata-pane" type="button" role="tab">🚌 Bus Tata</button>
+          <button class="nav-link btn-sm fw-semibold" id="tata-tab" data-bs-toggle="pill" data-bs-target="#tata-pane" type="button" role="tab">🚌 Bus Tata</button>
         </li>
         <li class="nav-item" role="presentation">
           <button class="nav-link btn-sm fw-semibold" id="ddd-tab" data-bs-toggle="pill" data-bs-target="#ddd-pane" type="button" role="tab">🚍 Dakar Dem Dikk</button>
@@ -201,26 +213,17 @@
       </ul>
       
       <div class="tab-content" id="lineTabsContent">
-        <div class="tab-pane fade show active" id="tata-pane" role="tabpanel">
-          <div class="d-flex flex-wrap gap-2">
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS GADAYE" data-destination="TERMINUS NGOR">Ligne 49</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS PETERSEN" data-destination="TERMINUS MALIKA PLAGE">Ligne 50</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS JAXAAY" data-destination="TERMINUS GARE DES BAUX MARAICHERS">Ligne 51</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS BEAUX MARAICHERS" data-destination="TERMINUS JAXAAY">Ligne 52</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS KEUR MASSAR (MARCHE)" data-destination="TERMINUS SEBIKHOTANE">Ligne 53</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS KEUR MASSAR (MTOA)" data-destination="TERMINUS UNIVERSITE CHEIKH ANTA DIOP">Ligne 54</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS RUFISQUE SONADIS" data-destination="TERMINUS PETERSEN">Ligne 55</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS JAXAAY 1" data-destination="TERMINUS PETERSEN">Ligne 56</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS RUFISQUE GOUYE MOURIDE" data-destination="TERMINUS ROND-POINT LIBERTE 6">Ligne 57</button>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS FASS MBAO (RAIL-BA)" data-destination="TERMINUS SHAM">Ligne 58</button>
+        <!-- Conteneur Bus Tata (En attente de clic) -->
+        <div class="tab-pane fade" id="tata-pane" role="tabpanel">
+          <div class="d-flex flex-wrap gap-2" id="tata-lines-container">
+            <span class="text-muted small">Chargement des lignes Bus Tata...</span>
           </div>
         </div>
         
+        <!-- Conteneur Dakar Dem Dikk (En attente de clic) -->
         <div class="tab-pane fade" id="ddd-pane" role="tabpanel">
-          <div class="d-flex flex-wrap gap-2">
-            <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS LIGNE 7" data-destination="TERMINUS LIGNE 7">Ligne 7</button>
-            <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS LIGNE 8" data-destination="TERMINUS LIGNE 8">Ligne 8</button>
-            <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 line-shortcut" data-origin="TERMINUS LIGNE 9" data-destination="TERMINUS LIGNE 9">Ligne 9</button>
+          <div class="d-flex flex-wrap gap-2" id="ddd-lines-container">
+            <span class="text-muted small">Chargement des lignes Dakar Dem Dikk...</span>
           </div>
         </div>
       </div>
@@ -340,19 +343,75 @@
     setupAutocomplete('destination', 'destinationResults');
     setupAutocomplete('singleStop', 'singleStopResults');
 
-    // Gestion des clics sur les raccourcis de lignes
-    document.querySelectorAll('.line-shortcut').forEach(btn => {
-      btn.addEventListener('click', function() {
-        document.getElementById('origin').value = this.getAttribute('data-origin');
-        document.getElementById('destination').value = this.getAttribute('data-destination');
-        
-        // Basculer automatiquement sur l'onglet Trajet si on clique sur un raccourci de ligne
-        const routeTab = new bootstrap.Tab(document.getElementById('tab-route'));
-        routeTab.show();
+    // Id de la ligne choisie via un raccourci (null pour une recherche manuelle)
+    let selectedLineId = null;
 
-        document.getElementById('searchForm').dispatchEvent(new Event('submit'));
-      });
-    });
+    // Chargement dynamique de TOUTES les lignes depuis la base de données
+    async function loadAllTransportLines() {
+      try {
+        const response = await fetch('api/get_lines.php');
+        const data = await response.json();
+        
+        if (!data.success || !data.lines) return;
+
+        const tataContainer = document.getElementById('tata-lines-container');
+        const dddContainer = document.getElementById('ddd-lines-container');
+        
+        tataContainer.innerHTML = '';
+        dddContainer.innerHTML = '';
+
+        let tataCount = 0;
+        let dddCount = 0;
+
+        data.lines.forEach(line => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          
+          const isTata = (line.transport_code === 'BUS_TATA');
+          btn.className = isTata 
+            ? 'btn btn-outline-primary btn-sm rounded-pill px-3 line-shortcut mb-2' 
+            : 'btn btn-outline-success btn-sm rounded-pill px-3 line-shortcut mb-2';
+          
+          btn.setAttribute('data-line-id', line.id);
+          btn.setAttribute('data-origin', line.origin_name || '');
+          btn.setAttribute('data-destination', line.destination_name || '');
+          btn.textContent = line.line_name;
+
+          // Événement au clic pour lancer la recherche du trajet et activer l'onglet Trajet
+          btn.addEventListener('click', function() {
+            selectedLineId = parseInt(this.getAttribute('data-line-id'), 10) || null;
+            document.getElementById('origin').value = this.getAttribute('data-origin');
+            document.getElementById('destination').value = this.getAttribute('data-destination');
+            
+            const routeTab = new bootstrap.Tab(document.getElementById('tab-route'));
+            routeTab.show();
+
+            document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+          });
+
+          if (isTata) {
+            tataContainer.appendChild(btn);
+            tataCount++;
+          } else {
+            dddContainer.appendChild(btn);
+            dddCount++;
+          }
+        });
+
+        if (tataCount === 0) {
+          tataContainer.innerHTML = '<span class="text-muted small">Aucune ligne Bus Tata enregistrée.</span>';
+        }
+        if (dddCount === 0) {
+          dddContainer.innerHTML = '<span class="text-muted small">Aucune ligne Dakar Dem Dikk enregistrée.</span>';
+        }
+
+      } catch (error) {
+        console.error('Erreur lors du chargement des lignes :', error);
+      }
+    }
+
+    // Charger les lignes au démarrage
+    document.addEventListener('DOMContentLoaded', loadAllTransportLines);
 
     // Fonction commune d'affichage des résultats
     function displayResults(data, summaryText) {
@@ -383,11 +442,11 @@
         const itineraryText = item.itinerary_details || item.description || '';
         const stops = itineraryText.split('-').map(s => s.trim()).filter(s => s.length > 0);
 
-        const transportType = (item.transport_type_name || item.transport_type_code || '').toUpperCase();
+        const typeCode = (item.transport_type_code || '').toUpperCase();
         let networkBadge = '';
-        if (transportType.includes('TATA') || transportType.includes('BUS')) {
+        if (typeCode === 'BUS_TATA') {
           networkBadge = '<span class="badge bg-info text-dark ms-2"><i class="bi bi-bus-front"></i> Bus Tata</span>';
-        } else if (transportType.includes('DEM') || transportType.includes('DDD') || transportType.includes('DAKAR')) {
+        } else if (typeCode === 'BUS_DDD') {
           networkBadge = '<span class="badge bg-success ms-2"><i class="bi bi-bus-front-fill"></i> Dakar Dem Dikk</span>';
         } else {
           networkBadge = `<span class="badge bg-secondary ms-2">${escapeHtml(item.transport_type_name || 'Transport')}</span>`;
@@ -448,6 +507,8 @@
       e.preventDefault();
       const origin = document.getElementById('origin').value.trim();
       const destination = document.getElementById('destination').value.trim();
+      const lineId = selectedLineId;
+      selectedLineId = null;
       
       document.getElementById('loading').classList.remove('d-none');
       document.getElementById('transportResults').innerHTML = '';
@@ -456,7 +517,7 @@
         const response = await fetch('api/search_route.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ origin, destination })
+          body: JSON.stringify({ origin, destination, line_id: lineId })
         });
         const data = await response.json();
         displayResults(data, `Trajet : ${origin} ➔ ${destination} (${data.results ? data.results.length : 0} trouvé(s))`);
