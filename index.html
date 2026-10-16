@@ -107,6 +107,53 @@
     .timeline-content {
       font-size: 0.9rem;
     }
+
+    /* ============================================ */
+    /* CARTES DES TYPES DE TRANSPORT (NOUVEAU) */
+    /* ============================================ */
+    .transport-type-card {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      height: 100%;
+    }
+    .transport-type-card:hover {
+      background: #e7f1ff;
+      border-color: #0d6efd;
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(13, 110, 253, 0.15);
+    }
+    .transport-type-img-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 70px;
+      overflow: hidden;
+    }
+    .transport-type-img {
+      max-width: 100%;
+      max-height: 70px;
+      object-fit: contain;
+    }
+    .transport-type-icon-fallback {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0d6efd, #0a58ca);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin: 0 auto;
+    }
+    @media (max-width: 576px) {
+      .transport-type-img-wrapper { height: 50px; }
+      .transport-type-img { max-height: 50px; }
+      .transport-type-icon-fallback { width: 45px; height: 45px; font-size: 22px; }
+    }
   </style>
 </head>
 <body class="bg-light">
@@ -193,6 +240,32 @@
 
       </div>
 
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION : TYPES DE TRANSPORT AU SÉNÉGAL (NOUVEAU) -->
+  <!-- ============================================ -->
+  <div class="container mb-4">
+    <div class="card shadow-sm border-0 p-4 bg-white rounded-4">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+          <h5 class="fw-bold mb-1 text-dark">
+            <i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>
+            Les types de transport au Sénégal
+          </h5>
+          <p class="text-muted small mb-0">
+            Découvrez tous les moyens de transport disponibles à Dakar et dans les régions
+          </p>
+        </div>
+      </div>
+
+      <div class="row g-3" id="transportTypesGrid">
+        <div class="col-12 text-center py-4">
+          <div class="spinner-border text-primary spinner-border-sm"></div>
+          <span class="text-muted ms-2 small">Chargement des types de transport...</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -410,8 +483,105 @@
       }
     }
 
-    // Charger les lignes au démarrage
-    document.addEventListener('DOMContentLoaded', loadAllTransportLines);
+    // ============================================
+    // CHARGEMENT DES TYPES DE TRANSPORT (NOUVEAU)
+    // ============================================
+    async function loadTransportTypes() {
+      const grid = document.getElementById('transportTypesGrid');
+      if (!grid) return;
+
+      try {
+        const response = await fetch('api/get_transport_types.php');
+        const data = await response.json();
+
+        if (!data.success || !data.types || data.types.length === 0) {
+          grid.innerHTML = '<div class="col-12 text-center text-muted py-4">Aucun type de transport disponible.</div>';
+          return;
+        }
+
+        grid.innerHTML = '';
+
+        // Correspondance entre code de transport et icône Bootstrap
+        const iconMap = {
+          'BUS_DDD':       'bi-bus-front-fill',
+          'BUS_TATA':      'bi-bus-front',
+          'TAXI_7_PLACES': 'bi-taxi-front-fill',
+          'WARGAINDE':     'bi-truck',
+          'CAR_RAPIDE':    'bi-bus-front',
+          'BRT':           'bi-bus-front-fill',
+          'TER':           'bi-train-front-fill',
+          'TAXI_CLANDO':   'bi-taxi-front',
+          'TAXI_JAUNE':    'bi-taxi-front-fill',
+          'MOTO_TIAK':     'bi-bicycle'
+        };
+
+        data.types.forEach(type => {
+          const col = document.createElement('div');
+          col.className = 'col-6 col-md-4 col-lg-3 col-xl-2';
+
+          const iconClass = iconMap[type.code] || 'bi-bus-front';
+
+          const imageHtml = type.image_url
+            ? `<img src="${escapeHtml(type.image_url)}" 
+                    alt="${escapeHtml(type.name)}"
+                    class="transport-type-img"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+               <div class="transport-type-icon-fallback" style="display:none;">
+                 <i class="bi ${iconClass}"></i>
+               </div>`
+            : `<div class="transport-type-icon-fallback">
+                 <i class="bi ${iconClass}"></i>
+               </div>`;
+
+          const capacityBadge = type.capacity_estimate
+            ? `<span class="badge bg-light text-dark border mt-2" style="font-size:10px;">
+                 <i class="bi bi-people-fill"></i> ${type.capacity_estimate} places
+               </span>`
+            : '';
+
+          col.innerHTML = `
+            <div class="transport-type-card p-3 text-center" 
+                 onclick="filterByTransportType('${escapeHtml(type.code)}', '${escapeHtml(type.name)}')"
+                 title="Voir les lignes ${escapeHtml(type.name)}">
+              <div class="transport-type-img-wrapper mb-2">
+                ${imageHtml}
+              </div>
+              <div class="fw-bold text-dark" style="font-size:0.85rem; line-height:1.2;">
+                ${escapeHtml(type.name)}
+              </div>
+              ${capacityBadge}
+            </div>
+          `;
+          grid.appendChild(col);
+        });
+
+      } catch (error) {
+        console.error('Erreur chargement types de transport:', error);
+        grid.innerHTML = '<div class="col-12 text-center text-danger py-4"></div>';
+      }
+    }
+
+    // Filtre les lignes par type de transport et scrolle vers la section
+    function filterByTransportType(code, name) {
+      const tabId = code === 'BUS_TATA' ? 'tata-tab' : 
+                    code === 'BUS_DDD' ? 'ddd-tab' : null;
+
+      if (tabId) {
+        const tab = document.getElementById(tabId);
+        if (tab) {
+          new bootstrap.Tab(tab).show();
+          document.getElementById('lineTabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } else {
+        alert(`Les lignes du type "${name}" seront bientôt disponibles.`);
+      }
+    }
+
+    // Charger les lignes et les types de transport au démarrage
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAllTransportLines();
+      loadTransportTypes();
+    });
 
     // Fonction commune d'affichage des résultats
     function displayResults(data, summaryText) {
@@ -590,28 +760,4 @@
                   <ul class="small text-muted ps-3 mb-3">
                     <li><strong>Vérifier les données :</strong> Financer les déplacements sur le terrain pour valider les arrêts, correspondances et nouveaux terminus.</li>
                     <li><strong>Maintenir l'infrastructure :</strong> Couvrir les frais de serveur et le développement des outils numériques de recherche.</li>
-                    <li><strong>Garantir la gratuité :</strong> Maintenir un accès 100% gratuit pour tous les usagers des transports à Dakar.</li>
-                  </ul>
-                  
-                  <div class="text-center mt-2">
-                    <span class="badge bg-white text-dark border shadow-xs px-3 py-1 rounded-pill small">
-                      Chaque geste compte pour améliorer la mobilité urbaine ! 🚍
-                    </span>
-                  </div>
-
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <p class="small mb-3">Données issues des documentations officielles du CETUD, de Dakar Dem Dikk et de l'AFTU.</p>
-          <div class="d-flex justify-content-center gap-3 text-xs">
-            <span>© 2026 DEY DEM Transports</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-</body>
-</html>
+                    <li><strong>Garantir la gratuité :</strong> Maintenir un accès 100% gratuit pour tous les usagers des transports
